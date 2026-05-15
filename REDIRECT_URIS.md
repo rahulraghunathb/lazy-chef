@@ -36,13 +36,14 @@ https://your-app.vercel.app/api/auth/whatsapp-callback
 
 ## 📝 How to Register These URIs
 
-### For Swiggy MCP Builders
+### For Swiggy MCP Builders (OAuth 2.1 with PKCE)
 
 1. Go to https://mcp.swiggy.com/builders/access/
 2. Navigate to your application settings
 3. Find "Redirect URIs" or "OAuth Configuration"
 4. Add the Swiggy Redirect URI above
-5. Save your **Client ID** and **Client Secret**
+5. Save your **Client ID** (no Client Secret needed for PKCE)
+6. Read [SWIGGY_OAUTH_SETUP.md](./SWIGGY_OAUTH_SETUP.md) for detailed OAuth 2.1 flow
 
 ### For Meta (WhatsApp)
 

@@ -1,17 +1,40 @@
 import { useRouter } from 'next/router';
 
+// PKCE helper functions
+const generateCodeVerifier = () => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode.apply(null, array))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+};
+
+const generateCodeChallenge = async (verifier) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(hashBuffer)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+};
+
 export default function Login() {
   const router = useRouter();
 
-  const handleSwiggyAuth = () => {
+  const handleSwiggyAuth = async () => {
     const redirectUri = `${window.location.origin}/api/auth/swiggy-callback`;
     const state = Math.random().toString(36).substring(7);
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-    // Store state in localStorage for verification
+    // Store state and code verifier for verification
     localStorage.setItem('swiggy_state', state);
+    localStorage.setItem('swiggy_code_verifier', codeVerifier);
 
-    // Redirect to Swiggy OAuth endpoint (you'll get this from Swiggy dashboard)
-    const swiggyAuthUrl = `https://auth.swiggy.com/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_SWIGGY_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}&scope=orders+profile`;
+    // Redirect to Swiggy OAuth endpoint (OAuth 2.1 with PKCE)
+    const swiggyAuthUrl = `https://mcp.swiggy.com/auth/authorize?client_id=${process.env.NEXT_PUBLIC_SWIGGY_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 
     window.location.href = swiggyAuthUrl;
   };
